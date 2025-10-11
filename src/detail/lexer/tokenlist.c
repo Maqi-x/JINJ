@@ -6,7 +6,8 @@
 #define JINJ_TOKEN_LIST_INITIAL_CAP 64
 #define _JINJ_TOKEN_LIST_GROW(cap) ((cap) == 0 ? JINJ_TOKEN_LIST_INITIAL_CAP : (cap) * 4)
 
-#define ALLOC_FAILED_RESULT ((JinjLexerResult) { .code = JinjLexerErrorAllocFailed, .error_details.view = "Unable to allocate memory for tokens using malloc" })
+#define ALLOC_FAILED_RESULT \
+    ((JinjLexerResult) { .code = JinjLexerErrorAllocFailed, .error_details.other = NULL })
 
 JinjToken* _jinj_token_list_resize(JinjTokenList* tl, usize new_cap) {
     JinjToken* new_tokens = malloc(new_cap * sizeof(JinjToken));
@@ -42,7 +43,7 @@ JinjLexerResult jinj_token_list_append(JinjTokenList* tl, JinjToken tok) {
     }
 
     tl->tokens[tl->len++] = tok;
-    return JINJ_LEXER_RESULT_OK;
+    return JINJ_LEXER_RESULT_SUCCESS;
 }
 
 JinjLexerResult jinj_token_list_append_new(JinjTokenList* tl, JinjTokenType type, int line, int column) {
@@ -62,19 +63,19 @@ JinjLexerResult jinj_token_list_extend(JinjTokenList* tl, JinjTokenList* other) 
 
     memcpy(tl->tokens + tl->len, other->tokens, other->len * sizeof(JinjToken));
     tl->len += other->len;
-    return JINJ_LEXER_RESULT_OK;
+    return JINJ_LEXER_RESULT_SUCCESS;
 }
 
 JinjLexerResult jinj_token_list_reserve(JinjTokenList* tl, usize min_cap) {
     usize natural_grow = _JINJ_TOKEN_LIST_GROW(tl->cap);
     usize resize_to = min_cap > natural_grow ? min_cap : natural_grow;
-    return _jinj_token_list_resize(tl, resize_to) == NULL ? ALLOC_FAILED_RESULT : JINJ_LEXER_RESULT_OK;
+    return _jinj_token_list_resize(tl, resize_to) == NULL ? ALLOC_FAILED_RESULT : JINJ_LEXER_RESULT_SUCCESS;
 }
 
 JinjLexerResult jinj_token_list_reserve_exact(JinjTokenList* tl, usize min_cap) {
     if (tl->cap < min_cap) {
-        return _jinj_token_list_resize(tl, min_cap) == NULL ? ALLOC_FAILED_RESULT : JINJ_LEXER_RESULT_OK;
+        return _jinj_token_list_resize(tl, min_cap) == NULL ? ALLOC_FAILED_RESULT : JINJ_LEXER_RESULT_SUCCESS;
     }
-    return JINJ_LEXER_RESULT_OK;
+    return JINJ_LEXER_RESULT_SUCCESS;
 }
 
