@@ -6,9 +6,26 @@
 #include <ctype.h>
 #include <jinj/detail/lexer.h>
 
-#define peek(lexer) (lexer->input[lexer->pos])
-#define next(lexer) (lexer->input[lexer->location.column++, lexer->pos++])
-#define peek_next(lexer) (lexer->input[lexer->pos + 1])
+static inline char peek(JinjLexer* lexer) {
+    if (lexer->pos >= lexer->input_len) return '\0';
+    return lexer->input[lexer->pos];
+}
+
+static inline char peek_next(JinjLexer* lexer) {
+    if (lexer->pos + 1 >= lexer->input_len) return '\0';
+    return lexer->input[lexer->pos + 1];
+}
+
+static inline char next(JinjLexer* lexer) {
+    if (lexer->pos >= lexer->input_len) return '\0';
+    char c = lexer->input[lexer->pos++];
+    lexer->location.column++;
+    if (c == '\n') {
+        lexer->location.line++;
+        lexer->location.column = 0;
+    }
+    return c;
+}
 
 JinjLexerResult _jinj_lexer_add_token(JinjLexer* lexer, JinjTokenType type) {
     return jinj_token_list_append_new(&lexer->tokens, type,
@@ -41,54 +58,50 @@ void jinj_lexer_deinit(JinjLexer *lexer) {
 JinjLexerResult jinj_lexer(JinjLexer* lexer) {
     lexer->state = JinjLexerStateDefault;
 
-    for (usize i = 0; i < lexer->input_len; ++i) {
-        char c = next(lexer);
+    while (lexer->pos < lexer->input_len) {
+        char c = peek(lexer);
 
         switch (lexer->state) {
         case JinjLexerStateDefault:
+            if (isspace(c)) { next(lexer); break; }
+
             lexer->token_start_pos = lexer->pos;
             lexer->token_start_location = lexer->location;
-
-            if (isspace(c)) {
-                if (c == '\n') {
-                    lexer->location.line++;
-                    lexer->location.column = 0;
-                }
-                break;
-            }
+            c = next(lexer);
 
             if (isalpha(c) || c == '_') {
                 lexer->state = JinjLexerStateParsingIdent;
-                continue;
+                break;
             } else if (c == '"') {
                 lexer->state = JinjLexerStateParsingString;
-                continue;
+                break;
             } else if (c == '\'') {
                 lexer->state = JinjLexerStateParsingChar;
-                continue;
+                break;
             } else if (isdigit(c)) {
                 lexer->state = JinjLexerStateParsingNumber;
-                continue;
+                break;
             }
 
-#           define HANDLE(ch, tp) case ch: _jinj_lexer_add_token(lexer, JinjTokenType##tp); break
+#           define HANDLE_SINGLE_CHAR_TOKEN(ch, tp) case ch: _jinj_lexer_add_token(lexer, JinjTokenType##tp); break
 
             switch (c) {
-            HANDLE('#', Hash);
-            HANDLE(',', Comma);
-            HANDLE(':', Colon);
-            HANDLE('=', Equal);
+            HANDLE_SINGLE_CHAR_TOKEN('#', Hash);
+            HANDLE_SINGLE_CHAR_TOKEN(',', Comma);
+            HANDLE_SINGLE_CHAR_TOKEN(':', Colon);
+            HANDLE_SINGLE_CHAR_TOKEN('=', Equal);
 
-            HANDLE('(', LParen);   HANDLE(')', RParen);
-            HANDLE('[', LBracket); HANDLE(']', RBracket);
-            HANDLE('{', LBrace);   HANDLE('}', RBrace);
+            HANDLE_SINGLE_CHAR_TOKEN('(', LParen);   HANDLE_SINGLE_CHAR_TOKEN(')', RParen);
+            HANDLE_SINGLE_CHAR_TOKEN('[', LBracket); HANDLE_SINGLE_CHAR_TOKEN(']', RBracket);
+            HANDLE_SINGLE_CHAR_TOKEN('{', LBrace);   HANDLE_SINGLE_CHAR_TOKEN('}', RBrace);
             }
 
-#           undef HANDLE
+#           undef HANDLE_SINGLE_CHAR_TOKEN
             break;
 
         case JinjLexerStateParsingIdent:
             if (isalnum(c) || c == '_') {
+                next(lexer);
                 continue;
             }
 
@@ -98,54 +111,57 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             lexer->state = JinjLexerStateDefault;
             break;
 
-        case JinjLexerStateParsingString:
-            if (c == '\\') c = next(lexer);
-            if (c != '"') continue;
 
-            _jinj_lexer_add_token_with_value(lexer, JinjTokenTypeString,
-                                             lexer->input + lexer->token_start_pos + 1,
-                                             lexer->pos - lexer->token_start_pos - 1);
+        case JinjLexerStateParsingString:
+            c = next(lexer);
+            if (c == '\\') { next(lexer); break; }
+            if (c != '"') break;
+
+            _jinj_lexer_add_token_with_value(
+                lexer, JinjTokenTypeString,
+                lexer->input + lexer->token_start_pos + 1,
+                lexer->pos - lexer->token_start_pos - 2
+            );
             lexer->state = JinjLexerStateDefault;
             break;
 
         case JinjLexerStateParsingChar:
-            if (c == '\\') c = next(lexer);
-            if (c != '\'') continue;
+            c = next(lexer);
+            if (c == '\\') { next(lexer); break; }
+            if (c != '\'') break;
 
-            _jinj_lexer_add_token_with_value(lexer, JinjTokenTypeChar,
-                                             lexer->input + lexer->token_start_pos + 1,
-                                             lexer->pos - lexer->token_start_pos - 1);
+            _jinj_lexer_add_token_with_value(
+                lexer, JinjTokenTypeChar,
+                lexer->input + lexer->token_start_pos + 1,
+                lexer->pos - lexer->token_start_pos - 2
+            );
             lexer->state = JinjLexerStateDefault;
             break;
 
         case JinjLexerStateParsingNumber:
             if (isdigit(c)) {
-                continue;
+                next(lexer);
+                break;
             }
 
-            if (c == '.') {
-                if (isdigit(peek_next(lexer))) {
-                    lexer->state = JinjLexerStateParsingFloat;
-                    continue;
-                }
+            if (c == '.' && isdigit(peek_next(lexer))) {
+                next(lexer);
+                lexer->state = JinjLexerStateParsingFloat;
+                break;
             }
 
-            // finalize integer
             _jinj_lexer_add_token_with_value(
                 lexer, JinjTokenTypeInt,
                 lexer->input + lexer->token_start_pos,
                 lexer->pos - lexer->token_start_pos
             );
-
             lexer->state = JinjLexerStateDefault;
-            // reprocess current char
-            lexer->pos--;
-            lexer->location.column--;
             break;
 
         case JinjLexerStateParsingFloat:
             if (isdigit(c)) {
-                continue;
+                next(lexer);
+                break;
             }
 
             _jinj_lexer_add_token_with_value(
@@ -153,10 +169,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
                 lexer->input + lexer->token_start_pos,
                 lexer->pos - lexer->token_start_pos
             );
-
             lexer->state = JinjLexerStateDefault;
-            lexer->pos--;
-            lexer->location.column--;
             break;
 
         case JinjLexerStateDone: assert("unreachable" && 0);
