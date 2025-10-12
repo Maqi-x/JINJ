@@ -1,5 +1,5 @@
-#include "jinj/detail/lexer/result.h"
 #include <jinj/detail/lexer.h>
+
 #include <ctype.h>
 #include <assert.h>
 
@@ -43,7 +43,13 @@ static inline char next(JinjLexer* lexer) {
     if (lexer->pos >= lexer->input_len) return '\0';
     char c = lexer->input[lexer->pos++];
     lexer->location.column++;
-    if (c == '\n') {
+
+    // for windows
+    if (c == '\r') {
+        if (peek(lexer) == '\n') lexer->pos++; // skip '\n' in CRLF
+        lexer->location.line++;
+        lexer->location.column = 0;
+    } else if (c == '\n') {
         lexer->location.line++;
         lexer->location.column = 0;
     }
