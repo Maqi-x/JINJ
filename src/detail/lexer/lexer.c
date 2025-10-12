@@ -189,6 +189,15 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             lexer->pos - lexer->token_start_pos
         );
         break;
+
+    case JinjLexerStateParsingFloat:
+    _jinj_lexer_add_token_with_value(
+        lexer, JinjTokenTypeFloat,
+        lexer->input + lexer->token_start_pos,
+        lexer->pos - lexer->token_start_pos
+    );
+    break;
+
     
     case JinjLexerStateParsingString:
         return (JinjLexerResult) {
