@@ -14,7 +14,7 @@ typedef enum JinjLexerFlags {
 } JinjLexerFlags;
 
 #define JINJ_LEXER_FLAGS_DEFAULT \
-    (JinjLexerSaveComments | JinjLexerTrimWhitespace)
+    (JinjLexerSaveComments | JinjLexerTrimWhitespace | JinjLexerAllowUtf8Idents)
 
 typedef enum JinjLexerState {
     JinjLexerStateDefault = 0,

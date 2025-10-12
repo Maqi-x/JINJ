@@ -2,6 +2,7 @@
 
 #include <ctype.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #define _jinj_lexer_unexpected_char(lexer, c) \
     do { \
@@ -93,7 +94,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
         char c = peek(lexer);
 
         switch (lexer->state) {
-        case JinjLexerStateDefault:
+        case JinjLexerStateDefault: {
             if (isspace(c)) { next(lexer); break; }
 
             lexer->token_start_pos = lexer->pos;
@@ -115,7 +116,11 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
                 }
             }
 
-            if (isalpha(c) || c == '_') {
+            bool is_ident_start = isalpha(c) || c == '_';
+            if (!is_ident_start && (lexer->flags & JinjLexerAllowUtf8Idents)) 
+                is_ident_start = (unsigned char)c >= 0x80;
+
+            if (is_ident_start) {
                 lexer->state = JinjLexerStateParsingIdent;
                 break;
             } else if (c == '"') {
@@ -148,6 +153,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
 
         continue_lexer_loop:
             break;
+        }
 
         case JinjLexerStateParsingLineComment:
             c = next(lexer);
@@ -189,8 +195,12 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             }
             break;
 
-        case JinjLexerStateParsingIdent:
-            if (isalnum(c) || c == '_') {
+        case JinjLexerStateParsingIdent: {
+            bool is_ident = isalnum(c) || c == '_';
+            if (!is_ident && (lexer->flags & JinjLexerAllowUtf8Idents)) 
+                is_ident = (unsigned char)c >= 0x80;
+
+            if (is_ident) {
                 next(lexer);
                 continue;
             }
@@ -200,7 +210,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
                                              lexer->pos - lexer->token_start_pos);
             lexer->state = JinjLexerStateDefault;
             break;
-
+        }
 
         case JinjLexerStateParsingString:
             c = next(lexer);
