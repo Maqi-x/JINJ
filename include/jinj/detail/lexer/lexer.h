@@ -101,6 +101,18 @@ JinjLexerResult _jinj_lexer_add_token(JinjLexer* lexer, JinjTokenType type);
 JinjLexerResult _jinj_lexer_add_token_with_value(JinjLexer* lexer, JinjTokenType type,
                                                  const char* value, usize value_len);
 
+/// @internal
+/// @brief Determine whether an identifier is a keyword or a regular identifier.
+/// @param lexer Pointer to the active lexer instance.
+/// @param value Pointer to the identifier text.
+/// @param value_len Length of the identifier text in bytes.
+/// @return The corresponding token type: `JinjTokenTypeTrueLit`, `JinjTokenTypeFalseLit`,
+///         `JinjTokenTypeNilLit`, or `JinjTokenTypeIdent`.
+/// @details This function checks whether the given identifier matches any
+///          reserved keywords (`true`, `false`, or `nil`). If not, it defaults
+///          to returning `JinjTokenTypeIdent`.
+JinjTokenType _jinj_lexer_get_keyword_or_ident_type(JinjLexer* lexer, const char* value, usize value_len);
+
 #endif // JINJ_DETAIL_LEXER_LEXER_H
 
 /// @}

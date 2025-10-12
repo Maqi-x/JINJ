@@ -18,7 +18,7 @@ static const char* jinj_token_type_to_string_map[] = {
     [JinjTokenTypeLBrace] =   "LBRACE",
     [JinjTokenTypeRBrace] =   "RBRACE",
 
-    [JinjTokenTypeHash] = "HASH",
+    [JinjTokenTypeHash] =  "HASH",
     [JinjTokenTypeComma] = "COMMA",
     [JinjTokenTypeColon] = "COLON",
     [JinjTokenTypeEqual] = "EQUAL",

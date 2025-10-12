@@ -20,8 +20,9 @@ typedef enum JinjTokenType {
     JinjTokenTypeChar,        ///< Character literal.
     JinjTokenTypeInt,         ///< Integer literal.
     JinjTokenTypeFloat,       ///< Floating-point literal.
-    JinjTokenTypeBool,        ///< Boolean literal (`true` or `false`).
-    JinjTokenTypeNil,         ///< `nil` literal.
+    JinjTokenTypeTrueLit,     ///< `true` boolean literal.
+    JinjTokenTypeFalseLit,    ///< `false` boolean literal.
+    JinjTokenTypeNilLit,      ///< `nil` literal.
 
     JinjTokenTypeLParen,      ///< `(` symbol
     JinjTokenTypeRParen,      ///< `)` symbol

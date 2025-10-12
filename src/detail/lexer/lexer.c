@@ -4,6 +4,7 @@
 
 #include <ctype.h>
 #include <assert.h>
+#include <string.h>
 #include <stdbool.h>
 
 #define _jinj_lexer_unexpected_char(lexer, c) \
@@ -69,6 +70,17 @@ JinjLexerResult _jinj_lexer_add_token_with_value(JinjLexer* lexer, JinjTokenType
     return jinj_token_list_append_new_with_value(&lexer->tokens, type,
             lexer->token_start_location.line, lexer->token_start_location.column,
             value, value_len);
+}
+
+JinjTokenType _jinj_lexer_get_keyword_or_ident_type(JinjLexer* lexer, const char* value, usize value_len) {
+    if (value_len == 4) {
+        if (memcmp(value, "true", 4) == 0)  return JinjTokenTypeTrueLit;
+        if (memcmp(value, "false", 4) == 0) return JinjTokenTypeFalseLit;
+    } else if (value_len == 3) {
+        if (memcmp(value, "nil", 3) == 0) return JinjTokenTypeNilLit;
+    }
+
+    return JinjTokenTypeIdent;
 }
 
 void jinj_lexer_init(JinjLexer *lexer, const char *input, usize input_len, JinjLexerFlags flags) {
@@ -211,9 +223,12 @@ JinjLexerResult jinj_lexer_tokenize(JinjLexer* lexer) {
                 continue;
             }
 
-            _jinj_lexer_add_token_with_value(lexer, JinjTokenTypeIdent,
-                                             lexer->input + lexer->token_start_pos,
-                                             lexer->pos - lexer->token_start_pos);
+            const char* value = lexer->input + lexer->token_start_pos;
+            const usize value_len = lexer->pos - lexer->token_start_pos;
+
+            _jinj_lexer_add_token_with_value(
+                lexer, _jinj_lexer_get_keyword_or_ident_type(lexer, value, value_len),
+                value, value_len);
             lexer->state = JinjLexerStateDefault;
             break;
         }
