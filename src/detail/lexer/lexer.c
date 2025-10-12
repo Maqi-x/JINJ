@@ -81,7 +81,7 @@ void jinj_lexer_init(JinjLexer *lexer, const char *input, usize input_len, JinjL
 
     lexer->token_start_location = (JinjTokenLocation) { 0, 0 };
     lexer->token_start_pos = 0;
-    
+
     lexer->flags = flags;
 }
 
@@ -89,7 +89,7 @@ void jinj_lexer_deinit(JinjLexer *lexer) {
     jinj_token_list_deinit(&lexer->tokens);
 }
 
-JinjLexerResult jinj_lexer(JinjLexer* lexer) {
+JinjLexerResult jinj_lexer_tokenize(JinjLexer* lexer) {
     lexer->state = JinjLexerStateDefault;
 
     while (lexer->pos < lexer->input_len) {
@@ -121,7 +121,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             }
 
             bool is_ident_start = isalpha(c) || c == '_';
-            if (!is_ident_start && (lexer->flags & JinjLexerAllowUtf8Idents)) 
+            if (!is_ident_start && (lexer->flags & JinjLexerAllowUtf8Idents))
                 is_ident_start = (unsigned char)c >= 0x80;
 
             if (is_ident_start) {
@@ -176,7 +176,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
                 lexer->state = JinjLexerStateDefault;
             }
             break;
-        
+
         case JinjLexerStateParsingBlockComment:
             c = next(lexer);
             if (c == '\0' && !(lexer->flags & JinjLexerAllowUnterminated)) {
@@ -185,7 +185,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
                     .location = lexer->token_start_location
                 };
             }
-        
+
             if (c == '*' && peek(lexer) == '/') {
                 next(lexer);
                 if (lexer->flags & JinjLexerSaveComments) {
@@ -203,7 +203,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
 
         case JinjLexerStateParsingIdent: {
             bool is_ident = isalnum(c) || c == '_';
-            if (!is_ident && (lexer->flags & JinjLexerAllowUtf8Idents)) 
+            if (!is_ident && (lexer->flags & JinjLexerAllowUtf8Idents))
                 is_ident = (unsigned char)c >= 0x80;
 
             if (is_ident) {
@@ -307,7 +307,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             lexer->pos - lexer->token_start_pos
         );
         break;
-    
+
     case JinjLexerStateParsingNumber:
         _jinj_lexer_add_token_with_value(
             lexer, JinjTokenTypeInt,
@@ -323,7 +323,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             lexer->pos - lexer->token_start_pos
         );
         break;
-    
+
     case JinjLexerStateParsingString:
         if (lexer->flags & JinjLexerAllowUnterminated) break;
         return (JinjLexerResult) {
@@ -339,7 +339,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             .location = lexer->token_start_location,
             .error_details.other = NULL,
         };
-        
+
 
     default:
         break;

@@ -2,35 +2,40 @@
 #include <stdlib.h>
 #include <string.h>
 
+static const char* jinj_token_type_to_string_map[] = {
+    [JinjTokenTypeIdent] =  "IDENT",
+    [JinjTokenTypeString] = "STRING",
+    [JinjTokenTypeChar] =   "CHAR",
+    [JinjTokenTypeInt] =    "INT",
+    [JinjTokenTypeFloat] =  "FLOAT",
+    [JinjTokenTypeBool] =   "BOOL",
+    [JinjTokenTypeNil] =    "NIL",
+
+    [JinjTokenTypeLParen] =   "LPAREN",
+    [JinjTokenTypeRParen] =   "RPAREN",
+    [JinjTokenTypeLBracket] = "BRACKET",
+    [JinjTokenTypeRBracket] = "BRACKET",
+    [JinjTokenTypeLBrace] =   "LBRACE",
+    [JinjTokenTypeRBrace] =   "RBRACE",
+
+    [JinjTokenTypeHash] = "HASH",
+    [JinjTokenTypeComma] = "COMMA",
+    [JinjTokenTypeColon] = "COLON",
+    [JinjTokenTypeEqual] = "EQUAL",
+
+    [JinjTokenTypeLineComment] =   "LINE_COMMENT",
+    [JinjTokenTypeBlockComment] = "BLOCK_COMMENT",
+
+    [JinjTokenTypeWhitespace] = "WHITESPACE",
+
+    [JinjTokenTypeEOF] = "EOF",
+};
+
 const char* jinj_token_type_to_string(JinjTokenType tt) {
-    switch (tt) {
-    case JinjTokenTypeIdent:  return "IDENT";
-    case JinjTokenTypeString: return "STRING";
-    case JinjTokenTypeChar:   return "CHAR";
-    case JinjTokenTypeInt:    return "INT";
-    case JinjTokenTypeFloat:  return "FLOAT";
-    case JinjTokenTypeBool:   return "BOOL";
-    case JinjTokenTypeNil:    return "NIL";
-
-    case JinjTokenTypeLParen:   return "LPAREN";
-    case JinjTokenTypeRParen:   return "RPAREN";
-    case JinjTokenTypeLBracket: return "LBRACKET";
-    case JinjTokenTypeRBracket: return "RBRACKET";
-    case JinjTokenTypeLBrace:   return "LBRACE";
-    case JinjTokenTypeRBrace:   return "RBRACE";
-
-    case JinjTokenTypeHash:  return "HASH";
-    case JinjTokenTypeComma: return "COMMA";
-    case JinjTokenTypeColon: return "COLON";
-    case JinjTokenTypeEqual: return "EQUAL";
-
-    case JinjTokenTypeLineComment:  return "LINE_COMMENT";
-    case JinjTokenTypeBlockComment: return "BLOCK_COMMENT";
-
-    case JinjTokenTypeWhitespace: return "WHITESPACE";
-
-    case JinjTokenTypeEOF: return "EOF";
-    }
+    if (tt < 0 || tt >= sizeof(jinj_token_type_to_string_map)/sizeof(char*))
+        return "UNKNOWN";
+    const char* s = jinj_token_type_to_string_map[tt];
+    return s ? s : "UNKNOWN";
 }
 
 usize jinj_format_token(JinjToken tok, usize n, char buf[static n]) {
@@ -50,7 +55,7 @@ usize jinj_format_token(JinjToken tok, usize n, char buf[static n]) {
     if (tok.value.str != NULL) {
         buf[count++] = '('; // there must always be at least one free character here
                             // - guaranteed by the condition from line 36
-        
+
         if (tok.value.len <= n) {
             memcpy(buf + count, tok.value.str, n - count - 1);
             count += n - count;
@@ -102,11 +107,9 @@ JinjToken jinj_make_token(JinjTokenType type, int line, int column) {
 
 JinjToken jinj_make_token_with_value(JinjTokenType type, int line, int column,
                                      const char* value, usize value_len) {
-    return (JinjToken) { 
+    return (JinjToken) {
         .type = type,
         .location = (JinjTokenLocation) { .line = line, .column = column },
         .value = (JinjTokenValue) { .str = value, .len = value_len },
     };
 }
-
-
