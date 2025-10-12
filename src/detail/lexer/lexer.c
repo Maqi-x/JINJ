@@ -1,3 +1,5 @@
+#include "jinj/detail/lexer/lexer.h"
+#include "jinj/detail/lexer/token.h"
 #include <jinj/detail/lexer.h>
 
 #include <ctype.h>
@@ -95,7 +97,9 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
 
         switch (lexer->state) {
         case JinjLexerStateDefault: {
-            if (isspace(c)) { next(lexer); break; }
+            if (lexer->flags & JinjLexerTrimWhitespace) {
+                if (isspace(c)) { next(lexer); break; }
+            }
 
             lexer->token_start_pos = lexer->pos;
             lexer->token_start_location = lexer->location;
@@ -132,6 +136,8 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             } else if (isdigit(c)) {
                 lexer->state = JinjLexerStateParsingNumber;
                 break;
+            } else if (isspace(c)) {
+                lexer->state = JinjLexerStateParsingWhitespace;
             }
 
 #           define HANDLE_SINGLE_CHAR_TOKEN(ch, tp) case ch: _jinj_lexer_add_token(lexer, JinjTokenType##tp); goto continue_lexer_loop
@@ -214,7 +220,10 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
 
         case JinjLexerStateParsingString:
             c = next(lexer);
-            if (c == '\\') { next(lexer); break; }
+            if (c == '\\') {
+                next(lexer);
+                break;
+            }
             if (c != '"') break;
 
             _jinj_lexer_add_token_with_value(
@@ -222,8 +231,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
                 lexer->input + lexer->token_start_pos + JINJ_LEXER_STRING_LITERAL_PREFIX_LEN,
                 lexer->pos - lexer->token_start_pos
                     - JINJ_LEXER_STRING_LITERAL_PREFIX_LEN
-                    - JINJ_LEXER_STRING_LITERAL_SUFFIX_LEN
-            );
+                    - JINJ_LEXER_STRING_LITERAL_SUFFIX_LEN);
             lexer->state = JinjLexerStateDefault;
             break;
 
@@ -237,8 +245,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
                 lexer->input + lexer->token_start_pos + JINJ_LEXER_CHAR_LITERAL_PREFIX_LEN,
                 lexer->pos - lexer->token_start_pos
                     - JINJ_LEXER_CHAR_LITERAL_PREFIX_LEN
-                    - JINJ_LEXER_CHAR_LITERAL_SUFFIX_LEN
-            );
+                    - JINJ_LEXER_CHAR_LITERAL_SUFFIX_LEN);
             lexer->state = JinjLexerStateDefault;
             break;
 
@@ -257,8 +264,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             _jinj_lexer_add_token_with_value(
                 lexer, JinjTokenTypeInt,
                 lexer->input + lexer->token_start_pos,
-                lexer->pos - lexer->token_start_pos
-            );
+                lexer->pos - lexer->token_start_pos);
             lexer->state = JinjLexerStateDefault;
             break;
 
@@ -271,8 +277,20 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             _jinj_lexer_add_token_with_value(
                 lexer, JinjTokenTypeFloat,
                 lexer->input + lexer->token_start_pos,
-                lexer->pos - lexer->token_start_pos
-            );
+                lexer->pos - lexer->token_start_pos);
+            lexer->state = JinjLexerStateDefault;
+            break;
+
+        case JinjLexerStateParsingWhitespace:
+            if (isspace(c)) {
+                next(lexer);
+                break;
+            }
+
+            _jinj_lexer_add_token_with_value(
+                lexer, JinjTokenTypeWhitespace,
+                lexer->input + lexer->token_start_pos,
+                lexer->pos - lexer->token_start_pos);
             lexer->state = JinjLexerStateDefault;
             break;
 

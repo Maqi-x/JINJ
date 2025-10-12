@@ -6,11 +6,13 @@
 #include "tokenlist.h"
 
 typedef enum JinjLexerFlags {
-    JinjLexerSaveComments = 1 << 0,
-    JinjLexerAllowUnterminated = 1 << 1,
-    JinjLexerTrimWhitespace = 1 << 2,
-    JinjLexerAllowUtf8Idents = 1 << 3,
-    JinjLexerSkipUnknown = 1 << 4,
+    JinjLexerFlagsNone             = 0,
+
+    JinjLexerSaveComments          = 1 << 0,
+    JinjLexerAllowUnterminated     = 1 << 1,
+    JinjLexerTrimWhitespace        = 1 << 2,
+    JinjLexerAllowUtf8Idents       = 1 << 3,
+    JinjLexerSkipUnknown           = 1 << 4,
 } JinjLexerFlags;
 
 #define JINJ_LEXER_FLAGS_DEFAULT \
@@ -27,6 +29,8 @@ typedef enum JinjLexerState {
 
     JinjLexerStateParsingLineComment,
     JinjLexerStateParsingBlockComment,
+
+    JinjLexerStateParsingWhitespace,
 
     JinjLexerStateDone,
 } JinjLexerState;
