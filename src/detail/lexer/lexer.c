@@ -1,10 +1,6 @@
-#include "jinj/detail/lexer/lexer.h"
-#include "jinj/detail/lexer/result.h"
-#include "jinj/detail/lexer/token.h"
-#include "jinj/detail/lexer/tokenlist.h"
-#include <assert.h>
-#include <ctype.h>
 #include <jinj/detail/lexer.h>
+#include <ctype.h>
+#include <assert.h>
 
 static inline char peek(JinjLexer* lexer) {
     if (lexer->pos >= lexer->input_len) return '\0';
