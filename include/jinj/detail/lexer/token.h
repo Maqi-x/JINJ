@@ -22,10 +22,10 @@ typedef enum JinjTokenType {
     JinjTokenTypeColon,
     JinjTokenTypeEqual,
 
-    JinjTokenTypeComment,
+    JinjTokenTypeLineComment,
     JinjTokenTypeBlockComment,
 
-    JinjTokenWhitespace,
+    JinjTokenTypeWhitespace,
 
     JinjTokenTypeEOF,
 } JinjTokenType;

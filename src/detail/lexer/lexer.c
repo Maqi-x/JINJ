@@ -1,6 +1,33 @@
+#include "jinj/detail/lexer/result.h"
 #include <jinj/detail/lexer.h>
 #include <ctype.h>
 #include <assert.h>
+
+#define _jinj_lexer_unexpected_char(lexer, c) \
+    do { \
+        if (!(lexer->flags & JinjLexerSkipUnknown)) { \
+            return (JinjLexerResult) { \
+                .code = JinjLexerErrorUnknownChar, \
+                .location = lexer->location, \
+                .error_details.ch = c, \
+            }; \
+        } \
+    } while (0)
+
+#define JINJ_LEXER_LINE_COMMENT_PREFIX_LEN 2 // '//'
+#define JINJ_LEXER_LINE_COMMENT_SUFFIX_LEN 1  // '\n'
+
+#define JINJ_LEXER_BLOCK_COMMENT_PREFIX_LEN 2 // '/*'
+#define JINJ_LEXER_BLOCK_COMMENT_SUFFIX_LEN 2  // '*/'
+
+#define JINJ_LEXER_STRING_LITERAL_PREFIX_LEN 1 // "
+#define JINJ_LEXER_STRING_LITERAL_SUFFIX_LEN 1 // "
+
+#define JINJ_LEXER_MULTILINE_STRING_LITERAL_PREFIX_LEN 3 // """
+#define JINJ_LEXER_MULTILINE_STRING_LITERAL_SUFFIX_LEN 3 // """
+
+#define JINJ_LEXER_CHAR_LITERAL_PREFIX_LEN 1 // "
+#define JINJ_LEXER_CHAR_LITERAL_SUFFIX_LEN 1 // "
 
 static inline char peek(JinjLexer* lexer) {
     if (lexer->pos >= lexer->input_len) return '\0';
@@ -31,7 +58,7 @@ JinjLexerResult _jinj_lexer_add_token(JinjLexer* lexer, JinjTokenType type) {
 JinjLexerResult _jinj_lexer_add_token_with_value(JinjLexer* lexer, JinjTokenType type,
                                                  const char* value, usize value_len) {
     return jinj_token_list_append_new_with_value(&lexer->tokens, type,
-            lexer->location.line, lexer->location.column,
+            lexer->token_start_location.line, lexer->token_start_location.column,
             value, value_len);
 }
 
@@ -67,6 +94,21 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             lexer->token_start_location = lexer->location;
             c = next(lexer);
 
+            if (c == '/') {
+                if (peek(lexer) == '/') {
+                    next(lexer);
+                    lexer->state = JinjLexerStateParsingLineComment;
+                    break;
+                } else if (peek(lexer) == '*') {
+                    next(lexer);
+                    lexer->state = JinjLexerStateParsingBlockComment;
+                    break;
+                } else {
+                    _jinj_lexer_unexpected_char(lexer, '/');
+                    break;
+                }
+            }
+
             if (isalpha(c) || c == '_') {
                 lexer->state = JinjLexerStateParsingIdent;
                 break;
@@ -81,7 +123,7 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
                 break;
             }
 
-#           define HANDLE_SINGLE_CHAR_TOKEN(ch, tp) case ch: _jinj_lexer_add_token(lexer, JinjTokenType##tp); break
+#           define HANDLE_SINGLE_CHAR_TOKEN(ch, tp) case ch: _jinj_lexer_add_token(lexer, JinjTokenType##tp); goto continue_lexer_loop
 
             switch (c) {
             HANDLE_SINGLE_CHAR_TOKEN('#', Hash);
@@ -95,6 +137,50 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
             }
 
 #           undef HANDLE_SINGLE_CHAR_TOKEN
+
+            _jinj_lexer_unexpected_char(lexer, c);
+
+        continue_lexer_loop:
+            break;
+
+        case JinjLexerStateParsingLineComment:
+            c = next(lexer);
+            if (c == '\n' || c == '\0') {
+                if (lexer->flags & JinjLexerSaveComments) {
+                    _jinj_lexer_add_token_with_value(
+                        lexer, JinjTokenTypeLineComment,
+                        lexer->input + lexer->token_start_pos + JINJ_LEXER_LINE_COMMENT_PREFIX_LEN,
+                        lexer->pos - lexer->token_start_pos
+                            - JINJ_LEXER_LINE_COMMENT_PREFIX_LEN
+                            - JINJ_LEXER_LINE_COMMENT_SUFFIX_LEN
+                    );
+                }
+                lexer->state = JinjLexerStateDefault;
+            }
+            break;
+        
+        case JinjLexerStateParsingBlockComment:
+            c = next(lexer);
+            if (c == '\0' && !(lexer->flags & JinjLexerAllowUnterminated)) {
+                return (JinjLexerResult) {
+                    .code = JinjLexerErrorUnterminatedBlockComment,
+                    .location = lexer->token_start_location
+                };
+            }
+        
+            if (c == '*' && peek(lexer) == '/') {
+                next(lexer);
+                if (lexer->flags & JinjLexerSaveComments) {
+                    _jinj_lexer_add_token_with_value(
+                        lexer, JinjTokenTypeBlockComment,
+                        lexer->input + lexer->token_start_pos + JINJ_LEXER_BLOCK_COMMENT_PREFIX_LEN,
+                        lexer->pos - lexer->token_start_pos
+                            - JINJ_LEXER_BLOCK_COMMENT_PREFIX_LEN
+                            - JINJ_LEXER_BLOCK_COMMENT_SUFFIX_LEN
+                    );
+                }
+                lexer->state = JinjLexerStateDefault;
+            }
             break;
 
         case JinjLexerStateParsingIdent:
@@ -117,8 +203,10 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
 
             _jinj_lexer_add_token_with_value(
                 lexer, JinjTokenTypeString,
-                lexer->input + lexer->token_start_pos + 1,
-                lexer->pos - lexer->token_start_pos - 2
+                lexer->input + lexer->token_start_pos + JINJ_LEXER_STRING_LITERAL_PREFIX_LEN,
+                lexer->pos - lexer->token_start_pos
+                    - JINJ_LEXER_STRING_LITERAL_PREFIX_LEN
+                    - JINJ_LEXER_STRING_LITERAL_SUFFIX_LEN
             );
             lexer->state = JinjLexerStateDefault;
             break;
@@ -130,8 +218,10 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
 
             _jinj_lexer_add_token_with_value(
                 lexer, JinjTokenTypeChar,
-                lexer->input + lexer->token_start_pos + 1,
-                lexer->pos - lexer->token_start_pos - 2
+                lexer->input + lexer->token_start_pos + JINJ_LEXER_CHAR_LITERAL_PREFIX_LEN,
+                lexer->pos - lexer->token_start_pos
+                    - JINJ_LEXER_CHAR_LITERAL_PREFIX_LEN
+                    - JINJ_LEXER_CHAR_LITERAL_SUFFIX_LEN
             );
             lexer->state = JinjLexerStateDefault;
             break;
@@ -201,16 +291,21 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
         break;
     
     case JinjLexerStateParsingString:
+        if (lexer->flags & JinjLexerAllowUnterminated) break;
         return (JinjLexerResult) {
             .code = JinjLexerErrorUnterminatedStringLiteral,
-            .location = lexer->token_start_location
+            .location = lexer->token_start_location,
+            .error_details.other = NULL,
         };
 
     case JinjLexerStateParsingChar:
+        if (lexer->flags & JinjLexerAllowUnterminated) break;
         return (JinjLexerResult) {
             .code = JinjLexerErrorUnterminatedCharLiteral,
-            .location = lexer->token_start_location
+            .location = lexer->token_start_location,
+            .error_details.other = NULL,
         };
+        
 
     default:
         break;

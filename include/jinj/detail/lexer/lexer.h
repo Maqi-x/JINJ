@@ -25,6 +25,9 @@ typedef enum JinjLexerState {
     JinjLexerStateParsingChar,
     JinjLexerStateParsingString,
 
+    JinjLexerStateParsingLineComment,
+    JinjLexerStateParsingBlockComment,
+
     JinjLexerStateDone,
 } JinjLexerState;
 

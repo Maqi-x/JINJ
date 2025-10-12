@@ -24,8 +24,10 @@ const char* jinj_token_type_to_string(JinjTokenType tt) {
     case JinjTokenTypeColon: return "COLON";
     case JinjTokenTypeEqual: return "EQUAL";
 
-    case JinjTokenTypeComment:      return "COMMENT";
+    case JinjTokenTypeLineComment:  return "LINE_COMMENT";
     case JinjTokenTypeBlockComment: return "BLOCK_COMMENT";
+
+    case JinjTokenTypeWhitespace: return "WHITESPACE";
 
     case JinjTokenTypeEOF: return "EOF";
     }

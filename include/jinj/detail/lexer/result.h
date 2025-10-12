@@ -8,7 +8,7 @@ typedef struct JinjLexerResult {
         JinjLexerSuccess = 0,
 
         JinjLexerErrorAllocFailed,
-        JinjLexerErrorUnexpectedChar,
+        JinjLexerErrorUnknownChar,
 
         JinjLexerErrorUnterminatedStringLiteral,
         JinjLexerErrorUnterminatedCharLiteral,
@@ -17,8 +17,7 @@ typedef struct JinjLexerResult {
     } code;
     JinjTokenLocation location;
     union {
-        char c;
-        JinjTokenLocation location;
+        char ch;
         void* other;
     } error_details;
 } JinjLexerResult;
