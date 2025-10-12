@@ -23,7 +23,9 @@ typedef enum JinjTokenType {
     JinjTokenTypeEqual,
 
     JinjTokenTypeComment,
-    JinjTokenTypeMultilineComment,
+    JinjTokenTypeBlockComment,
+
+    JinjTokenWhitespace,
 
     JinjTokenTypeEOF,
 } JinjTokenType;

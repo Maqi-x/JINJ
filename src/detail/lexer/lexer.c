@@ -35,7 +35,7 @@ JinjLexerResult _jinj_lexer_add_token_with_value(JinjLexer* lexer, JinjTokenType
             value, value_len);
 }
 
-void jinj_lexer_init(JinjLexer *lexer, const char *input, usize input_len) {
+void jinj_lexer_init(JinjLexer *lexer, const char *input, usize input_len, JinjLexerFlags flags) {
     jinj_token_list_init(&lexer->tokens);
     lexer->input = input;
     lexer->input_len = input_len;
@@ -45,6 +45,8 @@ void jinj_lexer_init(JinjLexer *lexer, const char *input, usize input_len) {
 
     lexer->token_start_location = (JinjTokenLocation) { 0, 0 };
     lexer->token_start_pos = 0;
+    
+    lexer->flags = flags;
 }
 
 void jinj_lexer_deinit(JinjLexer *lexer) {
@@ -191,13 +193,12 @@ JinjLexerResult jinj_lexer(JinjLexer* lexer) {
         break;
 
     case JinjLexerStateParsingFloat:
-    _jinj_lexer_add_token_with_value(
-        lexer, JinjTokenTypeFloat,
-        lexer->input + lexer->token_start_pos,
-        lexer->pos - lexer->token_start_pos
-    );
-    break;
-
+        _jinj_lexer_add_token_with_value(
+            lexer, JinjTokenTypeFloat,
+            lexer->input + lexer->token_start_pos,
+            lexer->pos - lexer->token_start_pos
+        );
+        break;
     
     case JinjLexerStateParsingString:
         return (JinjLexerResult) {

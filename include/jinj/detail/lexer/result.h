@@ -9,8 +9,11 @@ typedef struct JinjLexerResult {
 
         JinjLexerErrorAllocFailed,
         JinjLexerErrorUnexpectedChar,
+
         JinjLexerErrorUnterminatedStringLiteral,
         JinjLexerErrorUnterminatedCharLiteral,
+
+        JinjLexerErrorUnterminatedBlockComment,
     } code;
     JinjTokenLocation location;
     union {
