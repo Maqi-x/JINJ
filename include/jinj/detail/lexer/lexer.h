@@ -4,7 +4,7 @@
 /// @defgroup lexer Lexer
 /// @brief JINJ lexical analyzer module.
 /// @details This module provides tokenization of input text into structured tokens.
-/// @{ 
+/// @{
 
 #ifndef JINJ_DETAIL_LEXER_LEXER_H
 #define JINJ_DETAIL_LEXER_LEXER_H
@@ -63,12 +63,12 @@ typedef struct JinjLexer {
     JinjLexerFlags flags;                   ///< Active lexer configuration flags.
 
     const char* input;                      ///< Input source text buffer.
-    usize input_len;                        ///< Length of the input buffer in bytes.
+    jinj_usize_t input_len;                        ///< Length of the input buffer in bytes.
 
     JinjTokenLocation location;             ///< Current location in the input stream.
-    usize pos;                              ///< @internal Current byte offset in the input buffer.
+    jinj_usize_t pos;                              ///< @internal Current byte offset in the input buffer.
     JinjTokenLocation token_start_location; ///< Start location of the current token.
-    usize token_start_pos;                  ///< @internal Start position index of the current token.
+    jinj_usize_t token_start_pos;                  ///< @internal Start position index of the current token.
 
     JinjLexerState state;                   ///< @internal Current lexer state.
 
@@ -80,7 +80,7 @@ typedef struct JinjLexer {
 /// @param input Pointer to input string buffer.
 /// @param input_len Input length in bytes.
 /// @param flags Lexer configuration flags.
-void jinj_lexer_init(JinjLexer* lexer, const char* input, usize input_len, JinjLexerFlags flags);
+void jinj_lexer_init(JinjLexer* lexer, const char* input, jinj_usize_t input_len, JinjLexerFlags flags);
 
 /// @brief Free resources associated with a lexer.
 /// @param lexer Pointer to the lexer.
@@ -99,7 +99,7 @@ JinjLexerResult _jinj_lexer_add_token(JinjLexer* lexer, JinjTokenType type);
 /// @internal
 /// @brief Add a token with a string value to the lexer's token list.
 JinjLexerResult _jinj_lexer_add_token_with_value(JinjLexer* lexer, JinjTokenType type,
-                                                 const char* value, usize value_len);
+                                                 const char* value, jinj_usize_t value_len);
 
 /// @internal
 /// @brief Determine whether an identifier is a keyword or a regular identifier.
@@ -111,7 +111,7 @@ JinjLexerResult _jinj_lexer_add_token_with_value(JinjLexer* lexer, JinjTokenType
 /// @details This function checks whether the given identifier matches any
 ///          reserved keywords (`true`, `false`, or `nil`). If not, it defaults
 ///          to returning `JinjTokenTypeIdent`.
-JinjTokenType _jinj_lexer_get_keyword_or_ident_type(JinjLexer* lexer, const char* value, usize value_len);
+JinjTokenType _jinj_lexer_get_keyword_or_ident_type(JinjLexer* lexer, const char* value, jinj_usize_t value_len);
 
 #endif // JINJ_DETAIL_LEXER_LEXER_H
 

@@ -20,8 +20,8 @@
 ///          its capacity when new tokens are appended.
 typedef struct JinjTokenList {
     JinjToken* tokens; ///< Pointer to the allocated token buffer.
-    usize len;         ///< Current number of tokens in the list.
-    usize cap;         ///< Current capacity of the token buffer.
+    jinj_usize_t len;         ///< Current number of tokens in the list.
+    jinj_usize_t cap;         ///< Current capacity of the token buffer.
 } JinjTokenList;
 
 /// @internal
@@ -29,7 +29,7 @@ typedef struct JinjTokenList {
 /// @param tl Pointer to the token list.
 /// @param new_cap Desired new capacity.
 /// @return Pointer to the resized token buffer, or `NULL` on allocation failure.
-JinjToken* _jinj_token_list_resize(JinjTokenList* tl, usize new_cap);
+JinjToken* _jinj_token_list_resize(JinjTokenList* tl, jinj_usize_t new_cap);
 
 /// @brief Initialize an empty token list.
 /// @param tl Pointer to the token list to initialize.
@@ -62,7 +62,7 @@ JinjLexerResult jinj_token_list_append_new(JinjTokenList* tl, JinjTokenType type
 /// @param value_len Length of the string value in bytes.
 /// @return Result indicating success or allocation failure.
 JinjLexerResult jinj_token_list_append_new_with_value(JinjTokenList* tl, JinjTokenType type, int line, int column,
-                                                      const char* value, usize value_len);
+                                                      const char* value, jinj_usize_t value_len);
 
 /// @brief Extend the list with all tokens from another list.
 /// @param tl Pointer to the destination token list.
@@ -75,16 +75,15 @@ JinjLexerResult jinj_token_list_extend(JinjTokenList* tl, JinjTokenList* other);
 /// @param min_len Minimum number of tokens to reserve space for.
 /// @return Result indicating success or allocation failure.
 /// @details Similar to Rust's `Vec::reserve`.
-JinjLexerResult jinj_token_list_reserve(JinjTokenList* tl, usize min_len);
+JinjLexerResult jinj_token_list_reserve(JinjTokenList* tl, jinj_usize_t min_len);
 
 /// @brief Reserve exactly `min_len` capacity for tokens, reallocating if necessary.
 /// @param tl Pointer to the token list.
 /// @param min_len Exact number of tokens to reserve space for.
 /// @return Result indicating success or allocation failure.
 /// @details Similar to Rust's `Vec::reserve_exact`.
-JinjLexerResult jinj_token_list_reserve_exact(JinjTokenList* tl, usize min_len);
+JinjLexerResult jinj_token_list_reserve_exact(JinjTokenList* tl, jinj_usize_t min_len);
 
 #endif // JINJ_DETAIL_LEXER_TOKENLIST_H
 
 /// @}
-

@@ -58,7 +58,7 @@ typedef struct JinjTokenLocation {
 ///          literals, or comments.
 typedef struct JinjTokenValue {
     const char* str; ///< Pointer to the token's value string.
-    usize len;       ///< Length of the value in bytes.
+    jinj_usize_t len;       ///< Length of the value in bytes.
 } JinjTokenValue;
 
 /// @struct JinjToken
@@ -80,19 +80,19 @@ const char* jinj_token_type_to_string(JinjTokenType tt);
 /// @param n Size of the destination buffer.
 /// @param buf Output buffer (must have at least `n` bytes).
 /// @return Number of bytes written (excluding null terminator).
-usize jinj_format_token(JinjToken tok, usize n, char buf[static n]);
+jinj_usize_t jinj_format_token(JinjToken tok, jinj_usize_t n, char buf[static n]);
 
 /// @brief Convert a token into a newly allocated string representation.
 /// @param tok Token to convert.
 /// @param out Pointer to store the allocated string.
 /// @return Length of the resulting string (excluding null terminator).
-usize jinj_token_to_string(JinjToken tok, char** out);
+jinj_usize_t jinj_token_to_string(JinjToken tok, char** out);
 
 /// @brief Print a token to a file stream.
 /// @param tok Token to print.
 /// @param out File stream to write to.
 /// @return Number of bytes written.
-usize jinj_print_token(JinjToken tok, FILE* out);
+jinj_usize_t jinj_print_token(JinjToken tok, FILE* out);
 
 /// @brief Construct a new token from type and location data.
 /// @param type Token type.
@@ -109,9 +109,8 @@ JinjToken jinj_make_token(JinjTokenType type, int line, int column);
 /// @param value_len Length of the string value.
 /// @return Newly created token with value.
 JinjToken jinj_make_token_with_value(JinjTokenType type, int line, int column,
-                                     const char* value, usize value_len);
+                                     const char* value, jinj_usize_t value_len);
 
 #endif // JINJ_DETAIL_LEXER_TOKEN_H
 
 /// @}
-

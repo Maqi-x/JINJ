@@ -3,13 +3,14 @@
 #include <string.h>
 
 static const char* jinj_token_type_to_string_map[] = {
-    [JinjTokenTypeIdent] =  "IDENT",
-    [JinjTokenTypeString] = "STRING",
-    [JinjTokenTypeChar] =   "CHAR",
-    [JinjTokenTypeInt] =    "INT",
-    [JinjTokenTypeFloat] =  "FLOAT",
-    [JinjTokenTypeBool] =   "BOOL",
-    [JinjTokenTypeNil] =    "NIL",
+    [JinjTokenTypeIdent] =    "IDENT",
+    [JinjTokenTypeString] =   "STRING",
+    [JinjTokenTypeChar] =     "CHAR",
+    [JinjTokenTypeInt] =      "INT",
+    [JinjTokenTypeFloat] =    "FLOAT",
+    [JinjTokenTypeTrueLit] =  "TRUE",
+    [JinjTokenTypeFalseLit] = "FALSE",
+    [JinjTokenTypeNilLit] =   "NIL",
 
     [JinjTokenTypeLParen] =   "LPAREN",
     [JinjTokenTypeRParen] =   "RPAREN",
@@ -38,9 +39,9 @@ const char* jinj_token_type_to_string(JinjTokenType tt) {
     return s ? s : "UNKNOWN";
 }
 
-usize jinj_format_token(JinjToken tok, usize n, char buf[static n]) {
+jinj_usize_t jinj_format_token(JinjToken tok, jinj_usize_t n, char buf[static n]) {
     const char* type_string = jinj_token_type_to_string(tok.type);
-    const usize type_string_len = strlen(type_string);
+    const jinj_usize_t type_string_len = strlen(type_string);
 
     if (type_string_len <= n) {
         memcpy(buf, type_string, n-1);
@@ -48,7 +49,7 @@ usize jinj_format_token(JinjToken tok, usize n, char buf[static n]) {
         return n;
     }
 
-    usize count = 0;
+    jinj_usize_t count = 0;
     memcpy(buf, type_string, type_string_len);
     count += n;
 
@@ -70,9 +71,9 @@ usize jinj_format_token(JinjToken tok, usize n, char buf[static n]) {
     return count;
 }
 
-usize jinj_token_to_string(JinjToken tok, char** out) {
+jinj_usize_t jinj_token_to_string(JinjToken tok, char** out) {
     const char* type_string = jinj_token_type_to_string(tok.type);
-    const usize type_string_len = strlen(type_string);
+    const jinj_usize_t type_string_len = strlen(type_string);
 
     if (tok.value.str == NULL) {
         *out = malloc(type_string_len + 1); // +1 for \0
@@ -81,9 +82,9 @@ usize jinj_token_to_string(JinjToken tok, char** out) {
     }
 
     const char* value_string = tok.value.str;
-    const usize value_string_len = tok.value.len;
+    const jinj_usize_t value_string_len = tok.value.len;
 
-    const usize full_len =
+    const jinj_usize_t full_len =
         type_string_len
         + 1 // '('
         + value_string_len
@@ -106,7 +107,7 @@ JinjToken jinj_make_token(JinjTokenType type, int line, int column) {
 }
 
 JinjToken jinj_make_token_with_value(JinjTokenType type, int line, int column,
-                                     const char* value, usize value_len) {
+                                     const char* value, jinj_usize_t value_len) {
     return (JinjToken) {
         .type = type,
         .location = (JinjTokenLocation) { .line = line, .column = column },
