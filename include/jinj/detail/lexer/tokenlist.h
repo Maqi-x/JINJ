@@ -75,14 +75,14 @@ JinjLexerResult jinj_token_list_extend(JinjTokenList* tl, JinjTokenList* other);
 /// @param min_len Minimum number of tokens to reserve space for.
 /// @return Result indicating success or allocation failure.
 /// @details Similar to Rust's `Vec::reserve`.
-JinjLexerResult jinj_token_list_reserve(JinjTokenList* tl, jinj_usize_t min_len);
+JinjLexerResult jinj_token_list_reserve(JinjTokenList* tl, jinj_usize_t min_cap);
 
 /// @brief Reserve exactly `min_len` capacity for tokens, reallocating if necessary.
 /// @param tl Pointer to the token list.
 /// @param min_len Exact number of tokens to reserve space for.
 /// @return Result indicating success or allocation failure.
 /// @details Similar to Rust's `Vec::reserve_exact`.
-JinjLexerResult jinj_token_list_reserve_exact(JinjTokenList* tl, jinj_usize_t min_len);
+JinjLexerResult jinj_token_list_reserve_exact(JinjTokenList* tl, jinj_usize_t min_cap);
 
 #endif // JINJ_DETAIL_LEXER_TOKENLIST_H
 
