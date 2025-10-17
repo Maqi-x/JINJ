@@ -20,7 +20,14 @@ typedef struct JinjValue {
         JinjValueTypeTable,
     } type;
     union JinjValueData {
-        
+        JinjByteValue byte;
+        JinjRuneValue rune;
+        JinjIntValue i;
+        JinjFloatValue f;
+        JinjStringValue string;
+        JinjByteArrayValue byte_array;
+        JinjListValue list;
+        JinjTableValue table;
     } data;
 } JinjValue;
 
