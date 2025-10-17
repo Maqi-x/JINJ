@@ -12,19 +12,10 @@
 typedef size_t jinj_usize_t;
 typedef uint32_t jinj_rune_t;
 typedef uint64_t jinj_hash_t;
+typedef uint8_t jinj_byte_t;
 
 #if defined(__GNUC__) || defined(__clang__)
 #   define _JINJ_ATTR_MALLOC __attribute__((malloc))
 #else
 #   define _JINJ_ATTR_MALLOC
 #endif
-
-#define JINJ_GET_OPTIONAL_TYPE(T) \
-     struct { T value; jinj_bool_t has_value; }
-
-#define JINJ_DEFINE_OPTIONAL(T, Name) \
-    typedef JINJ_GET_OPTIONAL_TYPE(T) Name;
-
-#define JINJ_OPTIONAL_NONE(Name) ((Name) { .has_value = JINJ_FALSE })
-#define JINJ_OPTIONAL_SOME(Name, val) ((Name) { .value = val, .has_value = JINJ_TRUE })
-
