@@ -1,3 +1,6 @@
+#ifndef JINJ_PARSER_AST_NODE_POOL_H
+#define JINJ_PARSER_AST_NODE_POOL_H
+
 #include <jinj/defs.h>
 
 #include "node.h"
@@ -30,3 +33,6 @@ _JinjParserASTNode* _jinj_parser_ast_node_pool_alloc_many_uninit(_JinjParserASTN
 
 _JinjParserASTNode* _jinj_parser_ast_node_pool_alloc_zeroed(_JinjParserASTNodePool* pool);
 _JinjParserASTNode* _jinj_parser_ast_node_pool_alloc_many_zeroed(_JinjParserASTNodePool* pool, jinj_usize_t count);
+
+#endif // JINJ_PARSER_AST_NODE_POOL_H
+
