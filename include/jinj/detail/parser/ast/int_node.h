@@ -7,4 +7,4 @@ typedef struct _JinjParserASTIntNode {
     uint64_t value;
 } _JinjParserASTIntNode;
 
-_JinjParserASTIntNode* _jinj_parser_ast_int_node_alloc(JinjParser* parser);
+_JinjParserASTNode* _jinj_parser_ast_int_node_alloc(JinjParser* parser);
